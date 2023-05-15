@@ -1,14 +1,16 @@
 <script setup>
 import { ref } from 'vue'
+const emit = defineEmits(['color'])
 
 const color = ref('#000000')
+emit('color', color.value)
+
 function onInput(event) {
-	const value = event.target.value
-	color.value = value
+	color.value = event.target.value
+	emit('color', color.value)
 }
 </script>
 
 <template>
-	<p>{{ color }}</p>
 	<input type="color" :value="color" @input="onInput"/>
 </template>
