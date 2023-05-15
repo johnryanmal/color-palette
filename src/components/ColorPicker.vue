@@ -1,10 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 const emit = defineEmits(['color'])
+const props = defineProps({
+	color: { type: String, required: false, default: '#000000'}
+})
 
 import ColorSwatch from './ColorSwatch.vue'
 
-const color = ref('#000000')
+const color = ref(props.color)
 emit('color', color.value)
 
 function onInput(event) {

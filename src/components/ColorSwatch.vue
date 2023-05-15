@@ -14,6 +14,7 @@ const { color } = toRefs(props)
 
 <style scoped>
 	.swatch {
+		display: inline-block;
 		width: 3rem;
 		height: 3rem;
 		background-color: v-bind(color);
