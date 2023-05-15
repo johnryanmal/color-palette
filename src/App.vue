@@ -7,7 +7,7 @@ const color = ref('')
 </script>
 
 <template>
-  <ColorSwatch :color="color"/>
+  <p>{{ color }}</p>
   <ColorPicker @color="(value) => color = value" />
 </template>
 
