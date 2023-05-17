@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-const emit = defineEmits(['color'])
+
+const emit = defineEmits(['contextmenu'])
 const props = defineProps({
 	color: { type: String, required: false, default: '#000000'}
 })
@@ -8,21 +9,20 @@ const props = defineProps({
 import ColorSwatch from './ColorSwatch.vue'
 
 const color = ref(props.color)
-emit('color', color.value)
-
 function onInput(event) {
 	color.value = event.target.value
-	emit('color', color.value)
 }
 
 const input = ref(null)
 function onClick() {
 	input.value.click()
 }
+
+defineExpose({ color })
 </script>
 
 <template>
-	<ColorSwatch :color="color" @click="onClick"/>
+	<ColorSwatch :color="color" @click="onClick" @contextmenu="emit('contextmenu', $event)"/>
 	<input ref="input" type="color" :value="color" class="hidden" @input="onInput"/>
 </template>
 
