@@ -12,12 +12,30 @@ function onInput(event) {
   color.value = event.target.value
 }
 
+function onKeyDown(event) {
+  if (event.ctrlKey || event.metaKey) {
+    switch(event.code) {
+      case 'KeyC':
+        navigator.clipboard.writeText(color.value)
+        break
+      case 'KeyV':
+        navigator.clipboard.readText().then((text) => {
+          const hex = /^#[0-9a-f]{6}$/i
+          if (hex.test(text)) {
+            color.value = text
+          }
+        })
+        break
+    }
+  }
+}
+
 defineExpose({ color })
 </script>
 
 <template>
   <ColorSwatch :color="color">
-    <input type="color" :value="color" class="hidden" @input="onInput"/>
+    <input type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
   </ColorSwatch>
 </template>
 
