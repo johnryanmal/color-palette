@@ -9,7 +9,9 @@ const { color } = toRefs(props)
 </script>
 
 <template>
-  <div class="swatch"></div>
+  <div class="swatch">
+    <slot></slot>
+  </div>
 </template>
 
 <style scoped>

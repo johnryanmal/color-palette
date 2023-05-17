@@ -14,23 +14,22 @@ function onInput(event) {
 }
 
 const input = ref(null)
-function onClick() {
-  input.value.click()
-}
 
 defineExpose({ color })
 </script>
 
 <template>
-  <ColorSwatch :color="color" @click="onClick" @contextmenu="emit('contextmenu', $event)"/>
-  <input ref="input" type="color" :value="color" class="hidden" @input="onInput"/>
+  <ColorSwatch :color="color" @click="input.click()" @contextmenu="emit('contextmenu', $event)">
+    <input ref="input" type="color" :value="color" class="hidden" @input="onInput"/>
+  </ColorSwatch>
 </template>
 
 <style>
   .hidden {
     visibility: hidden;
-    width: 0px;
-    height: 0px;
+    width: 100%;
+    height: 100%;
+    border: 0;
     padding: 0;
     margin: 0;
   }
