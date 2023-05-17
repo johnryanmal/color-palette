@@ -16,9 +16,16 @@ const { color } = toRefs(props)
 
 <style scoped>
   .swatch {
+    position: relative;
     display: inline-block;
     width: 3rem;
     height: 3rem;
     background-color: v-bind(color);
+  }
+
+  .swatch:focus-within {
+    z-index: 1;
+    transform: scale(1.1);
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 10%);
   }
 </style>
