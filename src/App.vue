@@ -12,7 +12,7 @@ const palette = ref(null)
   <ColorPicker ref="picker"/>
   <button @click="() => palette.add(picker.color)">Add to palette</button>
   <hr/>
-  <ColorPalette ref="palette"/>
+  <ColorPalette ref="palette" :colors="['#ff0000', '#00ff00', '#0000ff']"/>
 </template>
 
 <style scoped>

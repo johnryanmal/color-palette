@@ -15,6 +15,10 @@ const swatchmap = ref(new Map())
 const swatches = ref([])
 const colors = computed(() => swatches.value.map((swatch) => swatch.color))
 
+for (const color of props.colors) {
+  add(color)
+}
+
 function add(color) {
   const id = uid()
   swatchmap.value.set(id, color)
