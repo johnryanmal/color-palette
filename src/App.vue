@@ -14,6 +14,3 @@ const palette = ref(null)
   <hr/>
   <ColorPalette ref="palette" :colors="['#ff0000', '#00ff00', '#0000ff']"/>
 </template>
-
-<style scoped>
-</style>
