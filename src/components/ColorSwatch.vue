@@ -16,6 +16,7 @@ const { color } = toRefs(props)
 
 <style scoped>
 .swatch {
+  position: relative;
   display: inline-block;
   vertical-align: bottom;
   width: 3rem;
