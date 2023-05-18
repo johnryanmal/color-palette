@@ -30,17 +30,26 @@ function onKeyDown(event) {
   }
 }
 
-defineExpose({ color })
+const input = ref(null)
+function focus() {
+  input.value?.focus()
+}
+function click() {
+  input.value?.click()
+}
+
+defineExpose({ color, focus, click })
 </script>
 
 <template>
-  <ColorSwatch :color="color">
-    <input type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
+  <ColorSwatch :color="color" @mousedown.prevent="focus" @contextmenu.prevent="click">
+    <input ref="input" type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
   </ColorSwatch>
 </template>
 
 <style>
   .hidden {
+    pointer-events: none;
     opacity: 0;
     width: 100%;
     height: 100%;

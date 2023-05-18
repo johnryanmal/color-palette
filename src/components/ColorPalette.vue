@@ -29,12 +29,18 @@ function remove(id) {
   return swatchmap.value.delete(id)
 }
 
+function onKeyDown(id, event) {
+  if (event.code == 'Backspace') {
+    remove(id)
+  }
+}
+
 defineExpose({ colors, add })
 </script>
 
 <template>
   <ColorPicker ref="swatches" v-for="[id, color] in swatchmap" :key="id"
     :color="color"
-    @contextmenu.prevent="remove(id)"
+    @keydown="onKeyDown(id, $event)"
   />
 </template>
