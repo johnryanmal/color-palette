@@ -31,6 +31,11 @@ function remove(id) {
 
 function onKeyDown(id, event) {
   if (event.code == 'Backspace') {
+    const index = swatches.value.findIndex((swatch) => swatch?.$el == event.currentTarget)
+    const last = swatches.value.length-1
+    const focusIndex = index < last ? index+1 : index-1
+    swatches.value[focusIndex]?.focus()
+
     remove(id)
   }
 }
