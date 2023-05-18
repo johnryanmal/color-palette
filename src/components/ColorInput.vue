@@ -20,7 +20,7 @@ function onKeyDown(event) {
         break
       case 'KeyV':
         navigator.clipboard.readText().then((text) => {
-          const hex = /^#[0-9a-f]{6}$/i
+          const hex = /^#[a-f\d]{6}$/i
           if (hex.test(text)) {
             color.value = text
           }
