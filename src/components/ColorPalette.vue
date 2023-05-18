@@ -36,6 +36,18 @@ function onKeyDown(id, event) {
   const index = selectable.findIndex((swatch) => swatch?.$el === event.currentTarget)
   const last = selectable.length-1
 
+  let prevleft = -Infinity
+  let columns = 0
+  for (const swatch of selectable) {
+    const left = swatch.$el.getBoundingClientRect().left
+    if (prevleft < left) {
+      columns += 1
+      prevleft = left
+    } else {
+      break
+    }
+  }
+
   switch (event.code) {
     case 'Backspace': {
       if (index !== last) {
@@ -52,6 +64,16 @@ function onKeyDown(id, event) {
     }
     case 'ArrowRight': {
       const focusIndex = index < last ? index+1 : index
+      selectable[focusIndex]?.focus()
+      break
+    }
+    case 'ArrowUp': {
+      const focusIndex = index >= columns ? index-columns : index
+      selectable[focusIndex]?.focus()
+      break
+    }
+    case 'ArrowDown': {
+      const focusIndex = index <= last-columns ? index+columns : index
       selectable[focusIndex]?.focus()
       break
     }
