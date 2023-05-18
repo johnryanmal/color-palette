@@ -34,20 +34,20 @@ const input = ref(null)
 function focus() {
   input.value?.focus()
 }
-function click() {
+function edit() {
   input.value?.click()
 }
 
-defineExpose({ color, focus, click })
+defineExpose({ color, focus, edit })
 </script>
 
 <template>
-  <ColorSwatch :color="color" @mousedown.prevent="focus" @contextmenu.prevent="click">
+  <ColorSwatch :color="color" @mousedown.prevent="focus" @contextmenu.prevent="edit">
     <input ref="input" type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
   </ColorSwatch>
 </template>
 
-<style>
+<style scoped>
   .hidden {
     pointer-events: none;
     opacity: 0;
