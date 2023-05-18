@@ -2,7 +2,7 @@
 import { toRefs } from 'vue'
 
 const props = defineProps({
-  color: String
+  color: { type: String, required: false, default: 'transparent' }
 })
 const { color } = toRefs(props)
 
@@ -16,14 +16,14 @@ const { color } = toRefs(props)
 
 <style scoped>
   .swatch {
-    position: relative;
     display: inline-block;
+    vertical-align: bottom;
     width: 3rem;
     height: 3rem;
     background-color: v-bind(color);
   }
 
-  .swatch:focus-within {
+  .swatch:hover, .swatch:focus-within {
     z-index: 1;
     transform: scale(1.1);
     box-shadow: 3px 3px 3px rgba(0, 0, 0, 10%);

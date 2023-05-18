@@ -46,15 +46,3 @@ defineExpose({ color, focus, edit })
     <input ref="input" type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
   </ColorSwatch>
 </template>
-
-<style scoped>
-  .hidden {
-    pointer-events: none;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    padding: 0;
-    margin: 0;
-  }
-</style>

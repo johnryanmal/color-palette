@@ -5,6 +5,7 @@ const props = defineProps({
 })
 
 import ColorInput from './ColorInput.vue';
+import NewSwatch from './NewSwatch.vue';
 
 let _id = 0
 function uid() {
@@ -48,4 +49,5 @@ defineExpose({ colors, add })
     :color="color"
     @keydown="onKeyDown(id, $event)"
   />
+  <NewSwatch @click="add('#ffffff')"/>
 </template>
