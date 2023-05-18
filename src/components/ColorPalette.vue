@@ -91,5 +91,6 @@ defineExpose({ colors, add })
   <ColorNew ref="newswatch"
     @click="add('#ffffff')"
     @keydown="onKeyDown(id, $event)"
+    @drop.prevent="add($event.dataTransfer.getData('text'))"
   />
 </template>

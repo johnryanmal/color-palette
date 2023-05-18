@@ -42,7 +42,12 @@ defineExpose({ color, focus, edit })
 </script>
 
 <template>
-  <ColorSwatch :color="color" @mousedown.prevent="focus" @contextmenu.prevent="edit">
+  <ColorSwatch :color="color"
+    @click="focus"
+    @contextmenu.prevent="edit"
+    draggable="true"
+    @dragstart="$event.dataTransfer.setData('text', color)"
+  >
     <input ref="input" type="color" :value="color" class="hidden" @input="onInput" @keydown="onKeyDown"/>
   </ColorSwatch>
 </template>
