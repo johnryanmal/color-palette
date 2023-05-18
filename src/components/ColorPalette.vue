@@ -14,6 +14,7 @@ function uid() {
 
 const swatchmap = ref(new Map())
 const swatches = ref([])
+const newswatch = ref(null)
 const colors = computed(() => swatches.value.map((swatch) => swatch.color))
 
 for (const color of props.colors) {
@@ -31,13 +32,29 @@ function remove(id) {
 }
 
 function onKeyDown(id, event) {
-  if (event.code == 'Backspace') {
-    const index = swatches.value.findIndex((swatch) => swatch?.$el == event.currentTarget)
-    const last = swatches.value.length-1
-    const focusIndex = index < last ? index+1 : index-1
-    swatches.value[focusIndex]?.focus()
+  const selectable = [...swatches.value, newswatch.value]
+  const index = selectable.findIndex((swatch) => swatch?.$el === event.currentTarget)
+  const last = selectable.length-1
 
-    remove(id)
+  switch (event.code) {
+    case 'Backspace': {
+      if (index !== last) {
+        const focusIndex = index < last-1 ? index+1 : index-1
+        selectable[focusIndex]?.focus()
+        remove(id)
+      }
+      break
+    }
+    case 'ArrowLeft': {
+      const focusIndex = index > 0 ? index-1 : index
+      selectable[focusIndex]?.focus()
+      break
+    }
+    case 'ArrowRight': {
+      const focusIndex = index < last ? index+1 : index
+      selectable[focusIndex]?.focus()
+      break
+    }
   }
 }
 
@@ -49,5 +66,8 @@ defineExpose({ colors, add })
     :color="color"
     @keydown="onKeyDown(id, $event)"
   />
-  <NewSwatch @click="add('#ffffff')"/>
+  <NewSwatch ref="newswatch"
+    @click="add('#ffffff')"
+    @keydown="onKeyDown(id, $event)"
+  />
 </template>
