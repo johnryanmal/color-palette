@@ -5,7 +5,7 @@ const props = defineProps({
 })
 
 import ColorInput from './ColorInput.vue';
-import NewSwatch from './NewSwatch.vue';
+import ColorNew from './ColorNew.vue';
 
 let _id = 0
 function uid() {
@@ -88,7 +88,7 @@ defineExpose({ colors, add })
     :color="color"
     @keydown="onKeyDown(id, $event)"
   />
-  <NewSwatch ref="newswatch"
+  <ColorNew ref="newswatch"
     @click="add('#ffffff')"
     @keydown="onKeyDown(id, $event)"
   />
