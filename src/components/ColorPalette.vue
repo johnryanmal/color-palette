@@ -4,7 +4,7 @@ const props = defineProps({
   colors: { type: Array, required: false, default: [] }
 })
 
-import ColorPicker from './ColorPicker.vue';
+import ColorInput from './ColorInput.vue';
 
 let _id = 0
 function uid() {
@@ -44,7 +44,7 @@ defineExpose({ colors, add })
 </script>
 
 <template>
-  <ColorPicker ref="swatches" v-for="[id, color] in swatchmap" :key="id"
+  <ColorInput ref="swatches" v-for="[id, color] in swatchmap" :key="id"
     :color="color"
     @keydown="onKeyDown(id, $event)"
   />
