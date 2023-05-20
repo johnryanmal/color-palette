@@ -4,15 +4,18 @@ const props = defineProps({
   colors: { type: Array, required: false, default: [] }
 })
 
-import ColorInput from './ColorInput.vue';
-import ColorNew from './ColorNew.vue';
+import ColorInput from './ColorInput.vue'
+import ColorNew from './ColorNew.vue'
+
+import draggable from 'vuedraggable'
 
 let _id = 0
 function uid() {
   return _id++
 }
 
-const swatchmap = ref(new Map())
+const swatchlist = ref([])
+const swatchmap = ref({})
 const swatches = ref([])
 const newswatch = ref(null)
 const colors = computed(() => swatches.value.map((swatch) => swatch.color))
@@ -22,13 +25,22 @@ for (const color of props.colors) {
 }
 
 function add(color) {
-  const id = uid()
-  swatchmap.value.set(id, color)
-  return id
+  const hex = /^#[a-f\d]{6}$/i
+  if (hex.test(color)) {
+    const id = uid()
+    const index = swatchlist.value.length
+    swatchlist.value.push({ id, color })
+    swatchmap.value[id] = index
+    return id
+  }
 }
 
 function remove(id) {
-  return swatchmap.value.delete(id)
+  const index = swatchmap.value[id]
+  if (index >= 0) {
+    swatchlist.value.splice(index, 1)
+    delete swatchmap.value[id]
+  }
 }
 
 function onKeyDown(id, event) {
@@ -84,13 +96,22 @@ defineExpose({ colors, add })
 </script>
 
 <template>
-  <ColorInput ref="swatches" v-for="[id, color] in swatchmap" :key="id"
-    :color="color"
-    @keydown="onKeyDown(id, $event)"
-  />
+  <draggable
+    v-model="swatchlist"
+    item-key="id"
+    tag="span"
+    @change="console.log"
+  >
+    <template #item="{ element, index }">
+      <ColorInput :ref="(el) => swatches[index] = el"
+        :color="element.color"
+        @keydown="onKeyDown(id, $event)"
+      />
+    </template>
+  </draggable>
   <ColorNew ref="newswatch"
     @click="add('#ffffff')"
     @keydown="onKeyDown(id, $event)"
-    @drop.prevent="add($event.dataTransfer.getData('text'))"
+    @drop="add($event.dataTransfer.getData('color'))"
   />
 </template>

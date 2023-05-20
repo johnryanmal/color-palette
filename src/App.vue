@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import ColorInput from './components/ColorInput.vue'
-import ColorPalette from './components/ColorPalette.vue';
+import ColorPalette from './components/ColorPalette.vue'
 
 const picker = ref(null)
 const palette = ref(null)
