@@ -67,7 +67,7 @@ const lineColor = computed(() => {
   color: v-bind(lineColor);
 }
 
-.swatch:hover, .swatch:focus-within {
+.swatch:focus-within {
   z-index: 1;
   transform: scale(1.1);
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 10%);

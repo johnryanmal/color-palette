@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUpdate } from 'vue'
 const props = defineProps({
   colors: { type: Array, required: false, default: [] }
 })
@@ -16,9 +16,14 @@ function uid() {
 
 const swatchlist = ref([])
 const swatchmap = ref({})
-const swatches = ref([])
+const swatchrefs = ref({})
+const swatches = computed(() => swatchlist.value.map((data) => swatchrefs.value[data.id]))
 const newswatch = ref(null)
-const colors = computed(() => swatches.value.map((swatch) => swatch.color))
+const colors = computed(() => swatches.value.map((swatch) => swatch?.color))
+
+onBeforeUpdate(() => {
+  swatchrefs.value = {}
+})
 
 for (const color of props.colors) {
   add(color)
@@ -28,16 +33,17 @@ function add(color) {
   const hex = /^#[a-f\d]{6}$/i
   if (hex.test(color)) {
     const id = uid()
-    const index = swatchlist.value.length
-    swatchlist.value.push({ id, color })
-    swatchmap.value[id] = index
+    const data = { id, color }
+    swatchlist.value.push(data)
+    swatchmap.value[id] = data
     return id
   }
 }
 
 function remove(id) {
-  const index = swatchmap.value[id]
-  if (index >= 0) {
+  const data = swatchmap.value[id]
+  const index = swatchlist.value.indexOf(data)
+  if (index !== -1) {
     swatchlist.value.splice(index, 1)
     delete swatchmap.value[id]
   }
@@ -51,7 +57,7 @@ function onKeyDown(id, event) {
   let prevleft = -Infinity
   let columns = 0
   for (const swatch of selectable) {
-    const left = swatch.$el.getBoundingClientRect().left
+    const left = swatch?.$el.getBoundingClientRect().left
     if (prevleft < left) {
       columns += 1
       prevleft = left
@@ -100,13 +106,13 @@ defineExpose({ colors, add })
     v-model="swatchlist"
     item-key="id"
     tag="span"
-    @change="console.log"
+    ghost-class="ghost"
   >
-    <template #item="{ element, index }">
-      <ColorInput :ref="(el) => swatches[index] = el"
+    <template #item="{ element }">
+      <ColorInput :ref="(el) => swatchrefs[element.id] = el"
         :color="element.color"
-        @keydown="onKeyDown(id, $event)"
-      />
+        @keydown="onKeyDown(element.id, $event)"
+      ></ColorInput>
     </template>
   </draggable>
   <ColorNew ref="newswatch"
@@ -115,3 +121,9 @@ defineExpose({ colors, add })
     @drop="add($event.dataTransfer.getData('color'))"
   />
 </template>
+
+<style scoped>
+.ghost {
+  opacity: 0.2;
+}
+</style>
