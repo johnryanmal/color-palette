@@ -17,9 +17,9 @@ function uid() {
 const swatchlist = ref([])
 const swatchmap = ref({})
 const swatchrefs = ref({})
-const swatches = computed(() => swatchlist.value.map((data) => swatchrefs.value[data.id]))
+const swatches = computed(() => swatchlist.value.map((data) => swatchrefs.value[data.id] ?? swatchmap.value[data.id]))
 const newswatch = ref(null)
-const colors = computed(() => swatches.value.map((swatch) => swatch?.color))
+const colors = computed(() => swatches.value.map((swatch) => swatch.color))
 
 onBeforeUpdate(() => {
   swatchrefs.value = {}
