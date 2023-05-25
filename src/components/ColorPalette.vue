@@ -112,6 +112,7 @@ defineExpose({ colors, add })
       <ColorInput :ref="(el) => swatchrefs[element.id] = el"
         :color="element.color"
         @keydown="onKeyDown(element.id, $event)"
+        @contextmenu.prevent="remove(element.id)"
       ></ColorInput>
     </template>
   </draggable>

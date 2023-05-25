@@ -42,7 +42,13 @@ defineExpose({ color })
 </script>
 
 <template>
-  <ColorInput ref="swatch" v-if="hex.test(_color)" :color="_color" @keydown="onKeyDown"/>
+  <ColorInput ref="swatch" v-if="hex.test(_color)"
+    :color="_color"
+    @contextmenu.prevent="_color = null"
+    @keydown="onKeyDown"
+    @dragenter.prevent
+    @dragover.prevent
+  />
   <ColorEmpty ref="empty" v-else
     @click="input.focus()"
     @dragenter.prevent

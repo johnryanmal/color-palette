@@ -11,6 +11,12 @@ const color = ref(props.color)
 function onInput(event) {
   color.value = event.target.value
 }
+function setColor(text) {
+  const hex = /^#[a-f\d]{6}$/i
+  if (hex.test(text)) {
+    color.value = text
+  }
+}
 
 function onKeyDown(event) {
   if (event.ctrlKey || event.metaKey) {
@@ -20,10 +26,7 @@ function onKeyDown(event) {
         break
       case 'KeyV':
         navigator.clipboard.readText().then((text) => {
-          const hex = /^#[a-f\d]{6}$/i
-          if (hex.test(text)) {
-            color.value = text
-          }
+          setColor(text)
         })
         break
     }
@@ -38,12 +41,13 @@ function edit() {
   input.value?.click()
 }
 
-defineExpose({ color, focus, edit })
+defineExpose({ color, setColor, focus, edit })
 </script>
 
 <template>
   <ColorSwatch :color="color"
     @click="focus"
+    @dblclick="edit"
     @contextmenu.prevent="edit"
     draggable="true"
     @dragstart="$event.dataTransfer.setData('color', color)"
