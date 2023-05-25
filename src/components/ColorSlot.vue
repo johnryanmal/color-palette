@@ -1,18 +1,20 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 import ColorInput from './ColorInput.vue'
 import ColorEmpty from './ColorEmpty.vue'
 
 const hex = /^#[a-f\d]{6}$/i
-const color = ref('')
+const _color = ref(null)
 
 const swatch = ref(null)
 const input = ref(null)
 
+const color = computed(() => swatch.value?.color)
+
 function setColor(text) {
   if (hex.test(text)) {
-    color.value = text
+    _color.value = text
   }
 }
 
@@ -29,16 +31,18 @@ function onKeyDown(event) {
   } else {
     switch(event.code) {
       case 'Backspace':
-        color.value = ''
+        _color.value = null
         nextTick(() => { input.value.focus() })
         break
     }
   }
 }
+
+defineExpose({ color })
 </script>
 
 <template>
-  <ColorInput ref="swatch" v-if="hex.test(color)" :color="color" @keydown="onKeyDown"/>
+  <ColorInput ref="swatch" v-if="hex.test(_color)" :color="_color" @keydown="onKeyDown"/>
   <ColorEmpty ref="empty" v-else
     @click="input.focus()"
     @dragenter.prevent
@@ -49,6 +53,3 @@ function onKeyDown(event) {
     <input ref="input" type="button" class="hidden"/>
   </ColorEmpty>
 </template>
-
-<style scoped>
-</style>

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import ColorInput from './components/ColorInput.vue'
 import ColorPalette from './components/ColorPalette.vue'
 import ColorBand from './components/ColorBand.vue'
-import ColorSlot from './components/ColorSlot.vue'
+import ColorBlend from './components/ColorBlend.vue'
 
 import chroma from 'chroma-js'
 
@@ -24,5 +24,5 @@ const palette = ref(null)
   <hr/>
   <ColorPalette ref="palette" :colors="['#ff0000', '#00ff00', '#0000ff']"/>
   <hr/>
-  <ColorSlot/>
+  <ColorBlend/>
 </template>
