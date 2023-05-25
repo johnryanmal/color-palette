@@ -65,6 +65,7 @@ const lineColor = computed(() => {
   height: 3rem;
   background-color: v-bind(color);
   color: v-bind(lineColor);
+  border-color: v-bind(lineColor);
 }
 
 .swatch:focus-within {
