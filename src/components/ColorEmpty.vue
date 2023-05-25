@@ -15,9 +15,3 @@ defineExpose({ focus })
 		<slot></slot>
 	</ColorSwatch>
 </template>
-
-<style scoped>
-.outlined {
-	border: 1px dashed black;
-}
-</style>
