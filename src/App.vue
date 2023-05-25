@@ -16,7 +16,11 @@ const palette = ref(null)
   <ColorInput ref="picker"/>
   <button @click="() => palette.add(picker.color)">Add to palette</button>
   <hr/>
-  <ColorBand v-if="palette" :func="chroma.bezier(palette.colors)"/>
+  <ColorBand v-if="palette" :func="
+    palette.colors.length === 0 && (() => '#000000') ||
+    palette.colors.length === 1 && (() => palette.colors[0]) ||
+    chroma.bezier(palette.colors)
+  "/>
   <hr/>
   <ColorPalette ref="palette" :colors="['#ff0000', '#00ff00', '#0000ff']"/>
   <hr/>
