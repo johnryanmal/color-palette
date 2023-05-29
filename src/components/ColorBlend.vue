@@ -9,7 +9,7 @@ const begin = ref(null)
 const end = ref(null)
 const blend = computed(() =>
   chroma.valid(begin.value?.color) && chroma.valid(end.value?.color)
-    ? chroma.scale([begin.value.color, end.value.color])
+    ? (x) => chroma.scale([begin.value.color, end.value.color])(x).hex()
     : (x) => `hsl(0 0% ${x*100}%)`
 )
 const steps = ref(10)
