@@ -17,7 +17,17 @@ function uid() {
 const swatchlist = ref([])
 const swatchmap = ref({})
 const swatchrefs = ref({})
-const swatches = computed(() => swatchlist.value.map((data) => swatchrefs.value[data.id] ?? swatchmap.value[data.id]))
+const swatches = computed(() => {
+  const array = []
+  for (const data of swatchlist.value) {
+    if (data.id in swatchrefs.value) {
+      array.push(swatchrefs.value[data.id])
+    } else {
+      return []
+    }
+  }
+  return array
+})
 const newswatch = ref(null)
 const colors = computed(() => swatches.value.map((swatch) => swatch.color))
 
