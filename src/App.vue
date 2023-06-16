@@ -4,9 +4,11 @@ import ColorInput from './components/ColorInput.vue'
 import ColorPalette from './components/ColorPalette.vue'
 import ColorBand from './components/ColorBand.vue'
 import ColorBlend from './components/ColorBlend.vue'
+import GraphEditor from './components/GraphEditor.vue'
 
 import chroma from 'chroma-js'
 
+const points = ref([[0,0],[1/3,1/10],[1,1]])
 const picker = ref(null)
 const palette = ref(null)
 </script>
@@ -25,4 +27,5 @@ const palette = ref(null)
   <ColorPalette ref="palette" :colors="['#ff0000', '#00ff00', '#0000ff']"/>
   <hr/>
   <ColorBlend/>
+  <GraphEditor v-model="points"/>
 </template>

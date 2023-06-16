@@ -1,24 +1,46 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { toRefs, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const emit = defineEmits('update:modelValue')
 const props = defineProps({
-	modelValue: Array
+	modelValue: { type: Array, required: true },
+	xmin: { type: Number, required: false, default: 0 },
+	xmax: { type: Number, required: false, default: 1 },
+	ymin: { type: Number, required: false, default: 0 },
+	ymax: { type: Number, required: false, default: 1 },
+	width: { type: Number, required: false, default: 300 },
+	height: { type: Number, required: false, default: 300 }
 })
+
+const { xmin, xmax, ymin, ymax, width, height } = toRefs(props)
 
 import Graph from './Graph.vue'
 
 import { createInterpolatorWithFallback } from 'commons-math-interpolation'
 
-function drawPoint(ctx, x, y) {
+function percentage(min, max, x) {
+  return (x-min)/(max-min) || 0
+}
+
+function lerp(start, end, delta) {
+	return start + (end - start) * delta
+}
+
+function scale(x, min, max, min2, max2) {
+	return lerp(min2, max2, percentage(min, max, x))
+}
+
+function drawCircle(ctx, x, y, r) {
 	ctx.beginPath()
-	ctx.arc(x, ctx.canvas.height-y, 5, 0, 2*Math.PI)
+	ctx.arc(x, ctx.canvas.height-y, r, 0, 2*Math.PI)
 	ctx.stroke()
 }
 
 function onDraw(ctx) {
 	for (const [x, y] of points.value) {
-		drawPoint(ctx, x, y)
+		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
+		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
+		drawCircle(ctx, cx, cy, pointSize.value)
 	}
 }
 
@@ -26,12 +48,90 @@ const points = ref(props.modelValue)
 const xs = computed(() => points.value.map(([x, y]) => x))
 const ys = computed(() => points.value.map(([x, y]) => y))
 const func = computed(() => createInterpolatorWithFallback('akima', xs.value, ys.value))
-const xmin = computed(() => Math.min(...xs.value))
-const xmax = computed(() => Math.max(...xs.value))
-const ymin = computed(() => Math.min(...ys.value))
-const ymax = computed(() => Math.max(...ys.value))
+const pointSize = ref(5)
+
+function sq(x) {
+	return x*x
+}
+
+function sqDist(x, y, x2, y2) {
+	const dx = Math.abs(x2 - x)
+	const dy = Math.abs(y2 - y)
+	return sq(dx) + sq(dy)
+}
+
+function nearestNeighbor(x, y, points) {
+	let minDist = Infinity
+	let nearest = null
+	for (const point of points) {
+		const [px, py] = point
+		const dist = sqDist(x, y, px, py)
+		if (dist < minDist) {
+			minDist = dist
+			nearest = point
+		}
+	}
+	return nearest
+}
+
+function getBounds(event) {
+	const bounds = event.target.getBoundingClientRect()
+	const left = bounds.left
+	const right = bounds.left + bounds.width
+	const top = bounds.top
+	const bottom = bounds.top + bounds.height
+
+	return { left, right, top, bottom }
+}
+
+const currPoint = ref(null)
+function onMouseDown(event) {
+	const { left, right, top, bottom } = getBounds(event)
+
+	const [mx, my] = [event.clientX, event.clientY]
+	const x = scale(mx, left, right, xmin.value, xmax.value)
+	const y = scale(my, bottom, top, ymin.value, ymax.value)
+	const nearest = nearestNeighbor(x, y, points.value)
+	const [px, py] = nearest
+	const cx = scale(px, xmin.value, xmax.value, left, right)
+	const cy = scale(py, ymin.value, ymax.value, bottom, top)
+	
+	if (sqDist(mx, my, cx, cy) <= sq(pointSize.value)) {
+		currPoint.value = nearest
+	}
+}
+
+function onMouseMove(event) {
+	if (currPoint.value) {
+		const { left, right, top, bottom } = getBounds(event)
+
+		const [mx, my] = [event.clientX, event.clientY]
+		const x = scale(mx, left, right, xmin.value, xmax.value)
+		const y = scale(my, bottom, top, ymin.value, ymax.value)
+
+		currPoint.value[0] = x
+		currPoint.value[1] = y
+		points.value.sort((a, b) => a[0] - b[0]) //sort by x (ascending)
+	}
+}
+
+function onMouseUp() {
+	currPoint.value = null
+}
+
+onMounted(() => {
+	document.addEventListener('mouseup', onMouseUp)
+})
+onBeforeUnmount(() => {
+	document.removeEventListener('mouseup', onMouseUp)
+})
 </script>
 
 <template>
-	<Graph @draw="onDraw" v-bind="{ func, xmin, xmax, ymin, ymax }"/>
+	<Graph
+		@draw="onDraw"
+		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
+		@mousedown="onMouseDown"
+		@mousemove="onMouseMove"
+	/>
 </template>
