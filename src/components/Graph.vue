@@ -2,8 +2,7 @@
 import { toRefs } from 'vue'
 
 const props = defineProps({
-	func: { type: Function, required: false, default: (x) => x },
-	steps: { type: Number, required: false, default: 100 },
+	func: { type: Function, required: false, default: (x) => undefined },
 	xmin: { type: Number, required: false, default: 0 },
 	xmax: { type: Number, required: false, default: 10 },
 	ymin: { type: Number, required: false, default: 0 },
@@ -16,7 +15,7 @@ const props = defineProps({
 
 import Canvas from './Canvas.vue'
 
-const { func, steps, xmin, xmax, ymin, ymax, width, height, lineColor, lineWidth } = toRefs(props)
+const { func, xmin, xmax, ymin, ymax, width, height, lineColor, lineWidth } = toRefs(props)
 
 function drawPath(ctx, points) {
 	if (points.length >= 2) {
@@ -40,23 +39,32 @@ function lerp(start, end, delta) {
 
 function render(ctx) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-	ctx.strokeStyle = lineColor.value
-	ctx.lineWidth = lineWidth.value
-	const path = []
-	for (let step = 1; step <= steps.value; step++) {
-		const sx = percentage(1, steps.value, step)
+	if (func.value) {
+		ctx.strokeStyle = lineColor.value
+		ctx.lineWidth = lineWidth.value
+		let path = []
+		for (let pixel = 0; pixel < width.value; pixel++) {
+			const sx = percentage(0, width.value-1, pixel)
 
-		const x = lerp(xmin.value, xmax.value, sx)
-		const y = func.value(x)
+			const x = lerp(xmin.value, xmax.value, sx)
+			const y = func.value(x)
+			
+			if ([undefined, null, NaN].includes(y)) {
+				//discontinuous path
+				drawPath(ctx, path)
+				path = []
+				continue
+			}
 
-		const sy = percentage(ymin.value, ymax.value, y)
+			const sy = percentage(ymin.value, ymax.value, y)
 
-		const px = lerp(0, ctx.canvas.width, sx)
-		const py = lerp(ctx.canvas.height, 0, sy)
+			const px = lerp(0, ctx.canvas.width, sx)
+			const py = lerp(ctx.canvas.height, 0, sy)
 
-		path.push([px, py])
+			path.push([px, py])
+		}
+		drawPath(ctx, path)
 	}
-	drawPath(ctx, path)
 }
 </script>
 
