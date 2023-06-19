@@ -36,18 +36,65 @@ function drawCircle(ctx, x, y, r) {
 	ctx.stroke()
 }
 
+function drawLine(ctx, x, y, x2, y2) {
+	ctx.beginPath()
+	ctx.moveTo(x, y)
+	ctx.lineTo(x2, y2)
+	ctx.stroke()
+}
+
+function drawVertical(ctx, x) {
+	drawLine(ctx, x, 0, x, ctx.canvas.height)
+}
+
 function onDraw(ctx) {
 	for (const [x, y] of points.value) {
 		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
 		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
 		drawCircle(ctx, cx, cy, pointSize.value)
+
+		if (vertical.value) {
+			drawVertical(ctx, cx)
+		}
+	}
+}
+
+function clamp(x, min, max) {
+	if (x < min) {
+		return min
+	} else if (x > max) {
+		return max
+	} else {
+		return x
 	}
 }
 
 const points = ref(props.modelValue)
-const xs = computed(() => points.value.map(([x, y]) => x))
-const ys = computed(() => points.value.map(([x, y]) => y))
-const func = computed(() => createInterpolatorWithFallback('akima', xs.value, ys.value))
+const vertical = computed(() => {
+	// edge case: one or more points with the same x value
+	const domain = new Set()
+	for (const [x, y] of points.value) {
+		if (domain.has(x)) {
+			return true
+		}
+		domain.add(x)
+	}
+	return false
+})
+const interpolator = computed(() => {
+	if (vertical.value) {
+		return () => undefined
+	}
+	const xs = []
+	const ys = []
+
+	for (const [x, y] of points.value) {
+		xs.push(x)
+		ys.push(y)
+	}
+
+	return createInterpolatorWithFallback('akima', xs, ys)
+})
 const pointSize = ref(5)
 
 function sq(x) {
@@ -130,7 +177,8 @@ onBeforeUnmount(() => {
 <template>
 	<Graph
 		@draw="onDraw"
-		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
+		:func="(x) => clamp(interpolator(x), ymin, ymax)"
+		v-bind="{ xmin, xmax, ymin, ymax, width, height }"
 		@mousedown="onMouseDown"
 		@mousemove="onMouseMove"
 	/>
