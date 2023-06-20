@@ -1,6 +1,7 @@
 <script setup>
 import { toRefs } from 'vue'
 
+const emit = defineEmits(['draw-bg', 'draw-fg'])
 const props = defineProps({
 	func: { type: Function, required: false, default: (x) => undefined },
 	xmin: { type: Number, required: false, default: 0 },
@@ -19,9 +20,9 @@ const { func, xmin, xmax, ymin, ymax, width, height, lineColor, lineWidth } = to
 
 function drawPath(ctx, points) {
 	if (points.length >= 2) {
-		const [sx, sy] = points[0]
+		const [bx, by] = points[0]
 		ctx.beginPath()
-		ctx.moveTo(sx, sy)
+		ctx.moveTo(bx, by)
 		for (const [x, y] of points.slice(1)) {
 			ctx.lineTo(x, y)
 		}
@@ -37,8 +38,11 @@ function lerp(start, end, delta) {
 	return start + (end - start) * delta
 }
 
-function render(ctx) {
+function clear(ctx) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+}
+
+function render(ctx) {
 	if (func.value) {
 		ctx.strokeStyle = lineColor.value
 		ctx.lineWidth = lineWidth.value
@@ -48,7 +52,7 @@ function render(ctx) {
 
 			const x = lerp(xmin.value, xmax.value, sx)
 			const y = func.value(x)
-			
+
 			if ([undefined, null, NaN].includes(y)) {
 				//discontinuous path
 				drawPath(ctx, path)
@@ -66,8 +70,15 @@ function render(ctx) {
 		drawPath(ctx, path)
 	}
 }
+
+function onDraw(ctx) {
+	clear(ctx)
+	emit('draw-bg', ctx)
+	render(ctx)
+	emit('draw-fg', ctx)
+}
 </script>
 
 <template>
-	<Canvas @draw="render" v-bind="{ width, height }"/>
+	<Canvas @draw="onDraw" v-bind="{ width, height }"/>
 </template>

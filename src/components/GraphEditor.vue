@@ -4,6 +4,7 @@ import { toRefs, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 const emit = defineEmits('update:modelValue')
 const props = defineProps({
 	modelValue: { type: Array, required: true },
+	steps: { type: Number, required: false, default: 10 },
 	xmin: { type: Number, required: false, default: 0 },
 	xmax: { type: Number, required: false, default: 1 },
 	ymin: { type: Number, required: false, default: 0 },
@@ -12,7 +13,7 @@ const props = defineProps({
 	height: { type: Number, required: false, default: 300 }
 })
 
-const { xmin, xmax, ymin, ymax, width, height } = toRefs(props)
+const { steps, xmin, xmax, ymin, ymax, width, height } = toRefs(props)
 
 import Graph from './Graph.vue'
 
@@ -30,33 +31,24 @@ function scale(x, min, max, min2, max2) {
 	return lerp(min2, max2, percentage(min, max, x))
 }
 
-function drawCircle(ctx, x, y, r) {
+function drawCircle(ctx, x, y, r, fill=false) {
 	ctx.beginPath()
 	ctx.arc(x, ctx.canvas.height-y, r, 0, 2*Math.PI)
 	ctx.stroke()
+	if (fill) {
+		ctx.fill()
+	}
 }
 
 function drawLine(ctx, x, y, x2, y2) {
 	ctx.beginPath()
-	ctx.moveTo(x, y)
-	ctx.lineTo(x2, y2)
+	ctx.moveTo(x, ctx.canvas.height-y)
+	ctx.lineTo(x2, ctx.canvas.height-y2)
 	ctx.stroke()
 }
 
 function drawVertical(ctx, x) {
 	drawLine(ctx, x, 0, x, ctx.canvas.height)
-}
-
-function onDraw(ctx) {
-	for (const [x, y] of points.value) {
-		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
-		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
-		drawCircle(ctx, cx, cy, pointSize.value)
-
-		if (vertical.value) {
-			drawVertical(ctx, cx)
-		}
-	}
 }
 
 function clamp(x, min, max) {
@@ -95,6 +87,7 @@ const interpolator = computed(() => {
 
 	return createInterpolatorWithFallback('akima', xs, ys)
 })
+const func = computed(() => (x) => clamp(interpolator.value(x), ymin.value, ymax.value))
 const pointSize = ref(5)
 
 function sq(x) {
@@ -142,7 +135,7 @@ function onMouseDown(event) {
 	const [px, py] = nearest
 	const cx = scale(px, xmin.value, xmax.value, left, right)
 	const cy = scale(py, ymin.value, ymax.value, bottom, top)
-	
+
 	if (sqDist(mx, my, cx, cy) <= sq(pointSize.value)) {
 		currPoint.value = nearest
 	}
@@ -166,6 +159,49 @@ function onMouseUp() {
 	currPoint.value = null
 }
 
+const stepPoints = computed(() => {
+	const array = []
+	for (let step = 1; step <= steps.value; step++) {
+		const x = scale(step, 1, steps.value, xmin.value, xmax.value)
+		const y = func.value(x)
+		array.push([x, y])
+	}
+	return array
+})
+const values = computed(() => stepPoints.value.map(([x, y]) => y))
+
+function drawBackground(ctx) {
+	ctx.strokeStyle = 'rgba(0,0,0,20%)'
+	ctx.lineWidth = 1
+	ctx.fillStyle = 'rgba(0,0,0,20%)'
+	for (const [x, y] of stepPoints.value) {
+		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
+		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
+
+		drawVertical(ctx, cx)
+		if (vertical.value) {
+			drawVertical(ctx, cx)
+		} else {
+			drawLine(ctx, cx, 0, cx, cy)
+			drawCircle(ctx, cx, cy, pointSize.value-1, true)
+		}
+	}
+}
+
+function drawForeground(ctx) {
+	for (const [x, y] of points.value) {
+		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
+		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
+		drawCircle(ctx, cx, cy, pointSize.value)
+
+		if (vertical.value) {
+			drawVertical(ctx, cx)
+		}
+	}
+}
+
+defineExpose({ values })
+
 onMounted(() => {
 	document.addEventListener('mouseup', onMouseUp)
 })
@@ -176,9 +212,9 @@ onBeforeUnmount(() => {
 
 <template>
 	<Graph
-		@draw="onDraw"
-		:func="(x) => clamp(interpolator(x), ymin, ymax)"
-		v-bind="{ xmin, xmax, ymin, ymax, width, height }"
+		@draw-bg="drawBackground"
+		@draw-fg="drawForeground"
+		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
 		@mousedown="onMouseDown"
 		@mousemove="onMouseMove"
 	/>
