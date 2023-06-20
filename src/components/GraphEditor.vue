@@ -1,5 +1,5 @@
 <script setup>
-import { toRefs, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { toRefs, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
@@ -144,27 +144,36 @@ function findPoint(mx, my) {
 
 	const nearest = nearestNeighbor(x, y, points.value)
 
-	const [px, py] = nearest
-	const cx = scale(px, xmin.value, xmax.value, left, right)
-	const cy = scale(py, ymin.value, ymax.value, bottom, top)
+	if (nearest) {
+		const [px, py] = nearest
+		
+		const cx = scale(px, xmin.value, xmax.value, left, right)
+		const cy = scale(py, ymin.value, ymax.value, bottom, top)
+		const cr =
+			(nearest === hoverPoint.value)
+				? pointSize.value + 2
+				: pointSize.value
 
-	const cr =
-		(nearest === hoverPoint.value)
-			? pointSize.value + 2
-			: pointSize.value
-
-	if (sqDist(mx, my, cx, cy) <= sq(cr)) {
-		return nearest
+		if (sqDist(mx, my, cx, cy) <= sq(cr)) {
+			return nearest
+		}
 	}
+}
+
+function toPoint(mx, my) {
+	const { left, right, top, bottom } = getBounds(graph.value.$el)
+
+	const px = clamp(mx, left, right)
+	const py = clamp(my, top, bottom)
+	const x = scale(px, left, right, xmin.value, xmax.value)
+	const y = scale(py, bottom, top, ymin.value, ymax.value)
+
+	return [x, y]
 }
 
 const currPoint = ref(null)
 const hoverPoint = ref(null)
 const graph = ref(null)
-
-function onMouseDown(event) {
-	currPoint.value = findPoint(event.clientX, event.clientY)
-}
 
 function onMouseHover(event) {
 	hoverPoint.value = findPoint(event.clientX, event.clientY)
@@ -172,15 +181,7 @@ function onMouseHover(event) {
 
 function onMouseMove(event) {
 	if (currPoint.value) {
-		const { left, right, top, bottom } = getBounds(graph.value.$el)
-
-		const [mx, my] = [event.clientX, event.clientY]
-		const px = clamp(mx, left, right)
-		const py = clamp(my, top, bottom)
-		const x = scale(px, left, right, xmin.value, xmax.value)
-		const y = scale(py, bottom, top, ymin.value, ymax.value)
-
-		const newPoint = [x, y]
+		const newPoint = toPoint(event.clientX, event.clientY)
 
 		points.value = points.value.map((point) => {
 			if (point === currPoint.value) {
@@ -194,8 +195,25 @@ function onMouseMove(event) {
 	}
 }
 
+function onMouseDown() {
+	currPoint.value = hoverPoint.value
+}
+
 function onMouseUp() {
 	currPoint.value = null
+}
+
+function onRightClick(event) {
+	points.value = points.value.filter((point) => point !== hoverPoint.value)
+	nextTick(() => {
+		hoverPoint.value = findPoint(event.clientX, event.clientY)
+	})
+}
+
+function onDoubleClick(event) {
+	const newPoint = toPoint(event.clientX, event.clientY)
+	points.value = [...points.value, newPoint]
+	hoverPoint.value = newPoint
 }
 
 const stepPoints = computed(() => {
@@ -274,7 +292,8 @@ onBeforeUnmount(() => {
 		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
 		@mousedown.prevent="onMouseDown"
 		@mousemove="onMouseHover"
-		@contextmenu.prevent
+		@contextmenu.prevent="onRightClick"
+		@dblclick="onDoubleClick"
 	/>
   <button @click="onFit" :disabled="vertical">Fit to Grid</button>
 </template>
