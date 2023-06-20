@@ -150,7 +150,7 @@ function findPoint(mx, my) {
 		const cx = scale(px, xmin.value, xmax.value, left, right)
 		const cy = scale(py, ymin.value, ymax.value, bottom, top)
 		const cr =
-			(nearest === hoverPoint.value)
+			(nearest === currPoint.value || nearest === hoverPoint.value)
 				? pointSize.value + 2
 				: pointSize.value
 
@@ -171,6 +171,7 @@ function toPoint(mx, my) {
 	return [x, y]
 }
 
+const drag = ref(false)
 const currPoint = ref(null)
 const hoverPoint = ref(null)
 const graph = ref(null)
@@ -179,8 +180,12 @@ function onMouseHover(event) {
 	hoverPoint.value = findPoint(event.clientX, event.clientY)
 }
 
+function onMouseHoverEnd() {
+	hoverPoint.value = null
+}
+
 function onMouseMove(event) {
-	if (currPoint.value) {
+	if (currPoint.value && drag.value) {
 		const newPoint = toPoint(event.clientX, event.clientY)
 
 		points.value = points.value.map((point) => {
@@ -197,10 +202,11 @@ function onMouseMove(event) {
 
 function onMouseDown() {
 	currPoint.value = hoverPoint.value
+	drag.value = true
 }
 
 function onMouseUp() {
-	currPoint.value = null
+	drag.value = false
 }
 
 function onRightClick(event) {
@@ -211,9 +217,17 @@ function onRightClick(event) {
 }
 
 function onDoubleClick(event) {
-	const newPoint = toPoint(event.clientX, event.clientY)
-	points.value = [...points.value, newPoint]
-	hoverPoint.value = newPoint
+	if (!hoverPoint.value) {
+		const newPoint = toPoint(event.clientX, event.clientY)
+		points.value = [...points.value, newPoint]
+		hoverPoint.value = newPoint
+	}
+}
+
+function onKeyDown(event) {
+	if (event.code === 'Backspace') {
+		points.value = points.value.filter((point) => point !== currPoint.value)
+	}
 }
 
 const stepPoints = computed(() => {
@@ -261,7 +275,7 @@ function drawForeground(ctx) {
 		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
 		switch (point) {
 			case currPoint.value:
-				drawCircle(ctx, cx, cy, pointSize.value+2)
+				drawCircle(ctx, cx, cy, pointSize.value+1 + drag.value)
 				break
 			case hoverPoint.value:
 				drawCircle(ctx, cx, cy, pointSize.value+1)
@@ -275,10 +289,12 @@ function drawForeground(ctx) {
 defineExpose({ values })
 
 onMounted(() => {
+	document.addEventListener('mousedown', onMouseDown)
 	document.addEventListener('mouseup', onMouseUp)
 	document.addEventListener('mousemove', onMouseMove)
 })
 onBeforeUnmount(() => {
+	document.addEventListener('mousedown', onMouseDown)
 	document.removeEventListener('mouseup', onMouseUp)
 	document.removeEventListener('mousemove', onMouseMove)
 })
@@ -290,10 +306,12 @@ onBeforeUnmount(() => {
 		@draw-bg="drawBackground"
 		@draw-fg="drawForeground"
 		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
-		@mousedown.prevent="onMouseDown"
+		@mousedown.prevent
 		@mousemove="onMouseHover"
+		@mouseleave="onMouseHoverEnd"
 		@contextmenu.prevent="onRightClick"
 		@dblclick="onDoubleClick"
+		@keydown="onKeyDown"
 	/>
   <button @click="onFit" :disabled="vertical">Fit to Grid</button>
 </template>
