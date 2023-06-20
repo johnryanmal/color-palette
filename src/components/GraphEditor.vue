@@ -272,9 +272,9 @@ onBeforeUnmount(() => {
 		@draw-bg="drawBackground"
 		@draw-fg="drawForeground"
 		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
-		@mousedown="onMouseDown"
+		@mousedown.prevent="onMouseDown"
 		@mousemove="onMouseHover"
 		@contextmenu.prevent
 	/>
-  <button @click="onFit">Fit to Grid</button>
+  <button @click="onFit" :disabled="vertical">Fit to Grid</button>
 </template>
