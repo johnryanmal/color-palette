@@ -33,5 +33,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<canvas ref="canvas" :width="width" :height="height"></canvas>
+	<canvas
+		ref="canvas"
+		:width="width"
+		:height="height"
+		tabindex="0"
+		:style="{ 'outline': 'none' }"
+		@mousedown="canvas.focus()"
+	>
+	</canvas>
 </template>
