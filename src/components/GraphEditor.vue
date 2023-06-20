@@ -66,7 +66,7 @@ const points = computed({
 		return props.modelValue
 	},
 	set(value) {
-		emit('update:modelValue', value)
+		emit('update:modelValue', value.toSorted(([x1, y1], [x2, y2]) => x1 - x2)) // sorted by x (ascending)
 	}
 })
 const verticals = computed(() => {
@@ -126,8 +126,8 @@ function nearestNeighbor(x, y, points) {
 	return nearest
 }
 
-function getBounds(event) {
-	const bounds = event.target.getBoundingClientRect()
+function getBounds(element) {
+	const bounds = element.getBoundingClientRect()
 	const left = bounds.left
 	const right = bounds.left + bounds.width
 	const top = bounds.top
@@ -136,34 +136,61 @@ function getBounds(event) {
 	return { left, right, top, bottom }
 }
 
-const currPoint = ref(null)
-function onMouseDown(event) {
-	const { left, right, top, bottom } = getBounds(event)
+function findPoint(mx, my) {
+	const { left, right, top, bottom } = getBounds(graph.value.$el)
 
-	const [mx, my] = [event.clientX, event.clientY]
 	const x = scale(mx, left, right, xmin.value, xmax.value)
 	const y = scale(my, bottom, top, ymin.value, ymax.value)
+
 	const nearest = nearestNeighbor(x, y, points.value)
+
 	const [px, py] = nearest
 	const cx = scale(px, xmin.value, xmax.value, left, right)
 	const cy = scale(py, ymin.value, ymax.value, bottom, top)
 
-	if (sqDist(mx, my, cx, cy) <= sq(pointSize.value)) {
-		currPoint.value = nearest
+	const cr =
+		(nearest === hoverPoint.value)
+			? pointSize.value + 2
+			: pointSize.value
+
+	if (sqDist(mx, my, cx, cy) <= sq(cr)) {
+		return nearest
 	}
+}
+
+const currPoint = ref(null)
+const hoverPoint = ref(null)
+const graph = ref(null)
+
+function onMouseDown(event) {
+	currPoint.value = findPoint(event.clientX, event.clientY)
+}
+
+function onMouseHover(event) {
+	hoverPoint.value = findPoint(event.clientX, event.clientY)
 }
 
 function onMouseMove(event) {
 	if (currPoint.value) {
-		const { left, right, top, bottom } = getBounds(event)
+		const { left, right, top, bottom } = getBounds(graph.value.$el)
 
 		const [mx, my] = [event.clientX, event.clientY]
-		const x = scale(mx, left, right, xmin.value, xmax.value)
-		const y = scale(my, bottom, top, ymin.value, ymax.value)
+		const px = clamp(mx, left, right)
+		const py = clamp(my, top, bottom)
+		const x = scale(px, left, right, xmin.value, xmax.value)
+		const y = scale(py, bottom, top, ymin.value, ymax.value)
 
-		currPoint.value[0] = x
-		currPoint.value[1] = y
-		points.value.sort((a, b) => a[0] - b[0]) //sort by x (ascending)
+		const newPoint = [x, y]
+
+		points.value = points.value.map((point) => {
+			if (point === currPoint.value) {
+				return newPoint
+			} else if (point) {
+				return point
+			}
+		})
+
+		currPoint.value = newPoint
 	}
 }
 
@@ -210,10 +237,20 @@ function drawForeground(ctx) {
 	}
 
 	ctx.strokeStyle = '#000000'
-	for (const [x, y] of points.value) {
+	for (const point of points.value) {
+		const [x, y] = point
 		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
 		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
-		drawCircle(ctx, cx, cy, pointSize.value)
+		switch (point) {
+			case currPoint.value:
+				drawCircle(ctx, cx, cy, pointSize.value+2)
+				break
+			case hoverPoint.value:
+				drawCircle(ctx, cx, cy, pointSize.value+1)
+				break
+			default:
+				drawCircle(ctx, cx, cy, pointSize.value)
+		}
 	}
 }
 
@@ -221,19 +258,23 @@ defineExpose({ values })
 
 onMounted(() => {
 	document.addEventListener('mouseup', onMouseUp)
+	document.addEventListener('mousemove', onMouseMove)
 })
 onBeforeUnmount(() => {
 	document.removeEventListener('mouseup', onMouseUp)
+	document.removeEventListener('mousemove', onMouseMove)
 })
 </script>
 
 <template>
 	<Graph
+		ref="graph"
 		@draw-bg="drawBackground"
 		@draw-fg="drawForeground"
 		v-bind="{ func, xmin, xmax, ymin, ymax, width, height }"
 		@mousedown="onMouseDown"
-		@mousemove="onMouseMove"
+		@mousemove="onMouseHover"
+		@contextmenu.prevent
 	/>
   <button @click="onFit">Fit to Grid</button>
 </template>
