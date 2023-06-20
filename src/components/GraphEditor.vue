@@ -1,7 +1,7 @@
 <script setup>
 import { toRefs, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
-const emit = defineEmits('update:modelValue')
+const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
 	modelValue: { type: Array, required: true },
 	steps: { type: Number, required: false, default: 10 },
@@ -61,18 +61,30 @@ function clamp(x, min, max) {
 	}
 }
 
-const points = ref(props.modelValue)
-const vertical = computed(() => {
-	// edge case: one or more points with the same x value
-	const domain = new Set()
-	for (const [x, y] of points.value) {
-		if (domain.has(x)) {
-			return true
-		}
-		domain.add(x)
+const points = computed({
+	get() {
+		return props.modelValue
+	},
+	set(value) {
+		emit('update:modelValue', value)
 	}
-	return false
 })
+const verticals = computed(() => {
+	// edge case: one or more points with the same x value
+	const repeats = {}
+	for (const [x, y] of points.value) {
+		repeats[x] ??= 0
+		repeats[x]++
+	}
+	const array = []
+	for (const [x, count] of Object.entries(repeats)) {
+		if (count > 1) {
+			array.push(x)
+		}
+	}
+	return array
+})
+const vertical = computed(() => verticals.value.length > 0)
 const interpolator = computed(() => {
 	if (vertical.value) {
 		return () => undefined
@@ -170,6 +182,10 @@ const stepPoints = computed(() => {
 })
 const values = computed(() => stepPoints.value.map(([x, y]) => y))
 
+function onFit() {
+	points.value = stepPoints.value.filter(([x, y]) => ![undefined, null, NaN].includes(y))
+}
+
 function drawBackground(ctx) {
 	ctx.strokeStyle = 'rgba(0,0,0,20%)'
 	ctx.lineWidth = 1
@@ -179,9 +195,7 @@ function drawBackground(ctx) {
 		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
 
 		drawVertical(ctx, cx)
-		if (vertical.value) {
-			drawVertical(ctx, cx)
-		} else {
+		if (!vertical.value) {
 			drawLine(ctx, cx, 0, cx, cy)
 			drawCircle(ctx, cx, cy, pointSize.value-1, true)
 		}
@@ -189,14 +203,17 @@ function drawBackground(ctx) {
 }
 
 function drawForeground(ctx) {
+	ctx.strokeStyle = '#ff0000'
+	for (const x of verticals.value) {
+		const vx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
+		drawVertical(ctx, vx)
+	}
+
+	ctx.strokeStyle = '#000000'
 	for (const [x, y] of points.value) {
 		const cx = scale(x, xmin.value, xmax.value, 0, ctx.canvas.width)
 		const cy = scale(y, ymin.value, ymax.value, 0, ctx.canvas.height)
 		drawCircle(ctx, cx, cy, pointSize.value)
-
-		if (vertical.value) {
-			drawVertical(ctx, cx)
-		}
 	}
 }
 
@@ -218,4 +235,5 @@ onBeforeUnmount(() => {
 		@mousedown="onMouseDown"
 		@mousemove="onMouseMove"
 	/>
+  <button @click="onFit">Fit to Grid</button>
 </template>
