@@ -47,18 +47,28 @@ function render(ctx) {
 		ctx.strokeStyle = lineColor.value
 		ctx.lineWidth = lineWidth.value
 		let path = []
+		let prev = null
 		for (let pixel = 0; pixel < width.value; pixel++) {
 			const sx = percentage(0, width.value-1, pixel)
 
 			const x = lerp(xmin.value, xmax.value, sx)
 			const y = func.value(x)
 
-			if ([undefined, null, NaN].includes(y)) {
-				//discontinuous path
-				drawPath(ctx, path)
-				path = []
-				continue
+			if (prev) {
+				const [xprev, yprev] = prev
+				const xhalf = lerp(xprev, x, 0.5)
+				const yhalf = func.value(xhalf)
+				const ylower = Math.min(yprev, y)
+				const yupper = Math.max(yprev, y)
+				if (!(ylower <= yhalf && yhalf <= yupper)) {
+					//discontinuous path
+					drawPath(ctx, path)
+					path = []
+					prev = null
+					continue
+				}
 			}
+			prev = [x, y]
 
 			const sy = percentage(ymin.value, ymax.value, y)
 
