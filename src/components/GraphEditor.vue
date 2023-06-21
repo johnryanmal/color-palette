@@ -327,5 +327,8 @@ onBeforeUnmount(() => {
 		@dblclick="onDoubleClick"
 		@keydown="onKeyDown"
 	/>
-  <button @click="onFit" :disabled="vertical">Fit to Grid</button>
+	<div>
+		<button @click="onFit" :disabled="vertical">Fit to Grid</button>
+  	<button @click="points = []">Clear</button>
+	</div>
 </template>

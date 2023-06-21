@@ -26,15 +26,15 @@ const graphVal = ref(null)
 
 <template>
 	<p>Colors: <input type="number" v-model="steps"/></p>
-	<div :style="{ 'display': 'inline-block' }">
+	<div class="graph-wrapper">
 		<h2>Hue</h2>
 		<GraphEditor ref="graphHue" v-bind="graphConfig({ ymax: 360, mode: 'modulo' })" />
 	</div>
-	<div :style="{ 'display': 'inline-block' }">
+	<div class="graph-wrapper">
 		<h2>Saturation</h2>
 		<GraphEditor ref="graphSat" v-bind="graphConfig()" />
 	</div>
-	<div :style="{ 'display': 'inline-block' }">
+	<div class="graph-wrapper">
 		<h2>Value</h2>
 		<GraphEditor ref="graphVal" v-bind="graphConfig()" />
 	</div>
@@ -49,3 +49,10 @@ const graphVal = ref(null)
 		</span>
 	</template>
 </template>
+
+<style scoped>
+.graph-wrapper {
+	display: inline-block;
+	margin-right: 3rem;
+}
+</style>
