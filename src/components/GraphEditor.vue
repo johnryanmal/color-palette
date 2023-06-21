@@ -9,10 +9,11 @@ const props = defineProps({
 	ymin: { type: Number, required: false, default: 0 },
 	ymax: { type: Number, required: false, default: 1 },
 	width: { type: Number, required: false, default: 300 },
-	height: { type: Number, required: false, default: 300 }
+	height: { type: Number, required: false, default: 300 },
+	mode: { type: String, requied: false, default: 'clamp' }
 })
 
-const { steps, xmin, xmax, ymin, ymax, width, height } = toRefs(props)
+const { steps, xmin, xmax, ymin, ymax, width, height, mode } = toRefs(props)
 
 import Graph from './Graph.vue'
 
@@ -60,6 +61,11 @@ function clamp(x, min, max) {
 	}
 }
 
+function modulo(n, d) {
+	//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
+	return ((n % d) + d) % d
+}
+
 const _points = ref([])
 const points = computed({
 	get() {
@@ -99,7 +105,15 @@ const interpolator = computed(() => {
 
 	return createInterpolatorWithFallback('akima', xs, ys)
 })
-const func = computed(() => (x) => clamp(interpolator.value(x), ymin.value, ymax.value))
+const func = computed(() => {
+	switch (mode.value) {
+		case 'modulo':
+			return (x) => modulo(interpolator.value(x), ymax.value-ymin.value) + ymin.value
+		case 'clamp':
+		default:
+			return (x) => clamp(interpolator.value(x), ymin.value, ymax.value)
+	}
+})
 const pointSize = ref(5)
 
 function sq(x) {

@@ -28,7 +28,7 @@ const graphVal = ref(null)
 	<p>Colors: <input type="number" v-model="steps"/></p>
 	<div :style="{ 'display': 'inline-block' }">
 		<h2>Hue</h2>
-		<GraphEditor ref="graphHue" v-bind="graphConfig({ ymax: 360 })" />
+		<GraphEditor ref="graphHue" v-bind="graphConfig({ ymax: 360, mode: 'modulo' })" />
 	</div>
 	<div :style="{ 'display': 'inline-block' }">
 		<h2>Saturation</h2>
