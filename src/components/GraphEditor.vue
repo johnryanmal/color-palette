@@ -3,7 +3,6 @@ import { toRefs, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue
 
 const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
-	modelValue: { type: Array, required: true },
 	steps: { type: Number, required: false, default: 10 },
 	xmin: { type: Number, required: false, default: 0 },
 	xmax: { type: Number, required: false, default: 1 },
@@ -61,12 +60,13 @@ function clamp(x, min, max) {
 	}
 }
 
+const _points = ref([])
 const points = computed({
 	get() {
-		return props.modelValue
+		return _points.value
 	},
 	set(value) {
-		emit('update:modelValue', value.toSorted(([x1, y1], [x2, y2]) => x1 - x2)) // sorted by x (ascending)
+		_points.value = value.toSorted(([x1, y1], [x2, y2]) => x1 - x2) // sorted by x (ascending)
 	}
 })
 const verticals = computed(() => {
@@ -286,7 +286,7 @@ function drawForeground(ctx) {
 	}
 }
 
-defineExpose({ values })
+defineExpose({ func, values })
 
 onMounted(() => {
 	document.addEventListener('mousedown', onMouseDown)

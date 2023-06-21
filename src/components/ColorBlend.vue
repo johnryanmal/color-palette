@@ -28,8 +28,8 @@ function percentage(min, max, x) {
     </div>
     <ColorBand :func="blend"/>
     <hr/>
-    <span>
-      <ColorSwatch v-if="steps > 0" v-for="step in steps"
+    <span v-if="steps > 0">
+      <ColorSwatch v-for="step in steps"
         :color="blend(percentage(1, steps, step))"
       />
     </span>
